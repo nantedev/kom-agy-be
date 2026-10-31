@@ -20,6 +20,11 @@ export const getApiInfo = (): ApiInfo => {
         path: '/',
         description: "Documentation d'entrée de l'API",
       },
+      {
+        method: 'GET',
+        path: '/health',
+        description: 'État du processus',
+      },
     ],
   }
 }
