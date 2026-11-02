@@ -4,5 +4,6 @@
     "titleBar.activeForeground": "#FFFFFF",
     "titleBar.inactiveBackground": "#B71C1C",
     "titleBar.inactiveForeground": "#FFFFFF"
-  }
+  },
+  "prisma.pinToPrisma6": true
 }
