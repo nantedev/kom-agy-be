@@ -25,6 +25,11 @@ export const getApiInfo = (): ApiInfo => {
         path: '/health',
         description: 'État du processus',
       },
+      {
+        method: 'GET',
+        path: '/db-health',
+        description: 'État de la base de données',
+      },
     ],
   }
 }
