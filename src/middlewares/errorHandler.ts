@@ -1,11 +1,22 @@
 import type { NextFunction, Request, Response } from 'express'
+import { toApiError } from '@/services/toApiError/toApiError.js'
 
 export const errorHandler = (
-  err: Error,
+  err: unknown,
   _req: Request,
   res: Response,
-  _next: NextFunction
+  next: NextFunction
 ): void => {
-  console.error(err)
-  res.status(500).json({ error: 'Internal Server Error' })
+  if (res.headersSent) {
+    next(err)
+    return
+  }
+
+  const { status, body } = toApiError(err)
+
+  if (status >= 500) {
+    console.error(err instanceof Error ? err.message : 'Internal Server Error')
+  }
+
+  res.status(status).json(body)
 }
