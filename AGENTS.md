@@ -5,6 +5,12 @@ API backend du projet Kommit, développée avec Node.js, Express, TypeScript (v6
 ## Arborescence
 
 ```
+.agents/
+├── agents/           # subagents spécialisés (test-planner, code-reviewer…)
+├── hooks/            # scripts des hooks de cycle de vie (ex. lintHook.js)
+├── rules/            # règles locales du repo (architecture, conventions…)
+├── skills/           # compétences actionnables (open-pr, write-code…)
+└── hooks.json        # déclaration des hooks (ex. Stop)
 src/
 ├── index.ts          # démarrage du serveur : lit la config, écoute. Rien d'autre.
 ├── app.ts            # assemblage de l'app Express. Ne connaît aucune route.

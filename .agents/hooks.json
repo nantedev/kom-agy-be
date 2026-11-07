@@ -1,0 +1,11 @@
+{
+  "lint-on-stop": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ./hooks/lintHook.js",
+        "timeout": 30
+      }
+    ]
+  }
+}
