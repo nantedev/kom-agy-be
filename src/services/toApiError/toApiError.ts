@@ -33,6 +33,31 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const resolve4xxStatus = (status: number | undefined, fallback: number): number =>
   status !== undefined && status >= 400 && status < 500 ? status : fallback
 
+export const isEmailUniqueConstraintError = (error: unknown): boolean => {
+  if (!isRecord(error) || error.code !== 'P2002') {
+    return false
+  }
+
+  const meta = isRecord(error.meta) ? error.meta : undefined
+  const target = meta?.target
+
+  if (Array.isArray(target)) {
+    return target.includes('email')
+  }
+
+  if (typeof target === 'string') {
+    return target.includes('email')
+  }
+
+  return false
+}
+
+const isRawExternalValidationMessage = (message: string): boolean =>
+  message === 'Validation Error' ||
+  /^\[(body|query|params|headers)\b/i.test(message) ||
+  /^Invalid (input|type|string|email|password|value|url|enum)/i.test(message) ||
+  /^Required$/i.test(message)
+
 export const toApiError = (error: unknown, defaultStatus?: number): HttpApiError => {
   if (error instanceof SyntaxError && isRecord(error) && error.status === 400) {
     return {
@@ -49,6 +74,8 @@ export const toApiError = (error: unknown, defaultStatus?: number): HttpApiError
   }
 
   const nestedBody = isRecord(error.body) ? error.body : undefined
+  const isExternalError =
+    nestedBody !== undefined || error.name === 'APIError' || Array.isArray(error.issues)
   const rawStatus =
     typeof error.status === 'number'
       ? error.status
@@ -69,11 +96,11 @@ export const toApiError = (error: unknown, defaultStatus?: number): HttpApiError
         : undefined
 
   // Vérifié dans better-auth 1.7 : au doublon d'email, le code émis est USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL (422).
-  // P2002 couvre une violation directe de la contrainte UNIQUE Prisma (RM9 : jamais 500).
+  // isEmailUniqueConstraintError limite P2002 à la contrainte UNIQUE sur email (RM9 : jamais 500).
   if (
     code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
     code === 'USER_ALREADY_EXISTS' ||
-    code === 'P2002'
+    isEmailUniqueConstraintError(error)
   ) {
     return {
       status: resolve4xxStatus(rawStatus, 409),
@@ -132,15 +159,31 @@ export const toApiError = (error: unknown, defaultStatus?: number): HttpApiError
     }
   }
 
-  if (code !== undefined && BUSINESS_ERROR_CODES.has(code as ApiError['code']) && message) {
+  // better-call émet aussi le code VALIDATION_ERROR, mais avec un message brut en anglais.
+  if (
+    code === 'VALIDATION_ERROR' &&
+    (isExternalError || (message !== undefined && isRawExternalValidationMessage(message)))
+  ) {
+    return {
+      status: resolve4xxStatus(rawStatus, 400),
+      body: {
+        code: 'VALIDATION_ERROR',
+        message: 'Les données envoyées sont invalides',
+      },
+    }
+  }
+
+  if (
+    !isExternalError &&
+    code !== undefined &&
+    BUSINESS_ERROR_CODES.has(code as ApiError['code']) &&
+    message
+  ) {
     return {
       status: resolve4xxStatus(rawStatus, 400),
       body: {
         code: code as ApiError['code'],
-        message:
-          code === 'VALIDATION_ERROR' && message === 'Validation Error'
-            ? 'Les données envoyées sont invalides'
-            : message,
+        message,
       },
     }
   }

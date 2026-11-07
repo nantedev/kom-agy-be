@@ -4,6 +4,10 @@ import type { Session } from '@/types/apiContract.js'
 
 const { getSessionMock } = vi.hoisted(() => ({ getSessionMock: vi.fn() }))
 
+vi.mock('@/repositories/authRepository.js', () => ({
+  authRepository: {},
+}))
+
 vi.mock('@/services/auth/authService.js', () => ({
   getSession: getSessionMock,
 }))
@@ -61,6 +65,7 @@ describe('4. Gestion des erreurs et pannes', () => {
 
       expect(nextHandler).toHaveBeenCalledOnce()
       expect(resForAuthenticated.status).not.toHaveBeenCalled()
+      expect(resForAuthenticated.locals.session).toEqual(activeSession)
     })
   })
 })

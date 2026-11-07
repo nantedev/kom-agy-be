@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { validateSignUp } from '@/services/auth/authValidation/authValidation.js'
+import {
+  validateSignIn,
+  validateSignUp,
+} from '@/services/auth/authValidation/authValidation.js'
 
 describe('2. Valeurs refusées', () => {
   describe('RM10 : Email mal formé ou mot de passe hors bornes (8 à 128 caractères)', () => {
@@ -185,6 +188,23 @@ describe("3. Unicité de l'email", () => {
         success: true,
         data: {
           name: 'Marc',
+          email: 'marc@x.com',
+          password: 'password123',
+        },
+      })
+    })
+
+    it('normalise " MARC@x.com " en "marc@x.com" au signin avant validation', () => {
+      const signInPayloadWithSpaces = {
+        email: ' MARC@x.com ',
+        password: 'password123',
+      }
+
+      const validationWithNormalizedEmail = validateSignIn(signInPayloadWithSpaces)
+
+      expect(validationWithNormalizedEmail).toEqual({
+        success: true,
+        data: {
           email: 'marc@x.com',
           password: 'password123',
         },

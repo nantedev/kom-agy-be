@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { toApiError } from '@/services/auth/toApiError/toApiError.js'
+import { toApiError } from '@/services/toApiError/toApiError.js'
 
 export const errorHandler = (
   err: unknown,

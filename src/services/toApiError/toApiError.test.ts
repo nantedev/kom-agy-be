@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toApiError } from '@/services/auth/toApiError/toApiError.js'
+import { toApiError } from '@/services/toApiError/toApiError.js'
 
 describe("3. Unicité de l'email", () => {
   describe('RM9 : Email déjà utilisé, EMAIL_ALREADY_EXISTS sans 500', () => {
@@ -60,6 +60,28 @@ describe("3. Unicité de l'email", () => {
         message: 'Un compte avec cet email existe déjà',
       })
     })
+
+    it('convertit en INTERNAL_ERROR (500) une violation UNIQUE Prisma (P2002) qui ne porte pas sur email', () => {
+      const prismaSessionTokenUniqueError = Object.assign(
+        new Error('Unique constraint failed on the fields: (`token`)'),
+        {
+          name: 'PrismaClientKnownRequestError',
+          code: 'P2002',
+          clientVersion: '6.19.3',
+          meta: { target: ['token'] },
+        }
+      )
+
+      const mappedTokenUniqueError = toApiError(prismaSessionTokenUniqueError)
+
+      expect(mappedTokenUniqueError).toEqual({
+        status: 500,
+        body: {
+          code: 'INTERNAL_ERROR',
+          message: 'Une erreur interne est survenue',
+        },
+      })
+    })
   })
 })
 
@@ -106,6 +128,26 @@ describe('4. Gestion des erreurs et pannes', () => {
       expect(mappedUnknownError.body.code).toBe('INTERNAL_ERROR')
       expect(mappedUnknownError.body.message.length).toBeGreaterThan(0)
       expect(mappedUnknownError.body.message).not.toContain('Raw upstream failure details')
+    })
+
+    it('traduit en français une erreur VALIDATION_ERROR brute émise par Better Auth sans exposer le message en anglais', () => {
+      const betterAuthValidationError = {
+        status: 400,
+        body: {
+          code: 'VALIDATION_ERROR',
+          message: '[body.password] Invalid input: expected string, received undefined',
+        },
+      }
+
+      const mappedValidationError = toApiError(betterAuthValidationError)
+
+      expect(mappedValidationError).toEqual({
+        status: 400,
+        body: {
+          code: 'VALIDATION_ERROR',
+          message: 'Les données envoyées sont invalides',
+        },
+      })
     })
 
     it('préserve le code, le message et le statut 4xx d’une ApiError métier déjà formée', () => {

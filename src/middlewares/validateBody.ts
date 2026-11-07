@@ -1,5 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express'
-import type { ValidationResult } from '@/services/auth/authValidation/authValidation.js'
+import type { ValidationResult } from '@/types/validation.js'
 
 export const validateBody =
   <T>(validator: (input: unknown) => ValidationResult<T>): RequestHandler =>

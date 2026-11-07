@@ -1,5 +1,5 @@
 import type { IncomingHttpHeaders } from 'node:http'
-import { toApiError } from '@/services/auth/toApiError/toApiError.js'
+import { toApiError } from '@/services/toApiError/toApiError.js'
 import type { Session } from '@/types/apiContract.js'
 
 export interface AuthRepository {
@@ -19,6 +19,46 @@ export type AuthHttpResult = {
   setCookies: string[]
   contentType: string
   body: string
+}
+
+const sanitizeAuthSuccessBody = (rawBody: string): string => {
+  if (!rawBody) {
+    return rawBody
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(rawBody)
+
+    // /sign-up/email et /sign-in/email incluent session.token dans le JSON natif de Better Auth :
+    // on ne renvoie que Session ({ user: { id, name, email } }) pour garder le token dans le seul cookie HttpOnly.
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'token' in parsed &&
+      'user' in parsed &&
+      typeof parsed.user === 'object' &&
+      parsed.user !== null
+    ) {
+      const userRecord = parsed.user as Record<string, unknown>
+      if (
+        typeof userRecord.id === 'string' &&
+        typeof userRecord.name === 'string' &&
+        typeof userRecord.email === 'string'
+      ) {
+        return JSON.stringify({
+          user: {
+            id: userRecord.id,
+            name: userRecord.name,
+            email: userRecord.email,
+          },
+        })
+      }
+    }
+  } catch {
+    return rawBody
+  }
+
+  return rawBody
 }
 
 export const toWebHeaders = (nodeHeaders?: IncomingHttpHeaders | Headers): Headers => {
@@ -46,13 +86,9 @@ export const toWebHeaders = (nodeHeaders?: IncomingHttpHeaders | Headers): Heade
 }
 
 export const getSession = async (
-  headers?: IncomingHttpHeaders | Headers,
-  authRepo?: AuthRepository
+  headers: IncomingHttpHeaders | Headers | undefined,
+  authRepo: AuthRepository
 ): Promise<Session> => {
-  if (!authRepo) {
-    return null
-  }
-
   return authRepo.getSession(toWebHeaders(headers))
 }
 
@@ -95,7 +131,7 @@ export const forwardAuthRequest = async (
 
     const errorPayload =
       typeof parsedError === 'object' && parsedError !== null
-        ? { ...parsedError, status: response.status }
+        ? { status: response.status, body: parsedError }
         : { status: response.status }
 
     const mappedError = toApiError(errorPayload, response.status)
@@ -108,10 +144,12 @@ export const forwardAuthRequest = async (
     }
   }
 
+  const rawBody = await response.text()
+
   return {
     status: response.status,
     setCookies: response.headers.getSetCookie(),
     contentType: response.headers.get('content-type') ?? 'application/json',
-    body: await response.text(),
+    body: sanitizeAuthSuccessBody(rawBody),
   }
 }
