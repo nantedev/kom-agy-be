@@ -56,7 +56,7 @@
   }
   ```
 
-- [ ] Scénario RM8 exécuté et validé
+- [x] Scénario RM8 exécuté et validé
 
 ---
 
@@ -96,7 +96,7 @@
 - **Étape 1** : statut HTTP `200`, en-têtes CORS `Access-Control-Allow-Origin: http://localhost:5173` et `Access-Control-Allow-Credentials: true`, et en-tête `Set-Cookie` posant le cookie de session (`HttpOnly`, `SameSite=Lax`).
 - **Étape 2** : statut HTTP `200`, corps JSON contenant `user` avec `id`, `"name": "Alice"` et `"email": "alice@example.com"`.
 
-- [ ] Scénario RM12 exécuté et validé
+- [x] Scénario RM12 exécuté et validé
 
 ---
 
@@ -132,7 +132,7 @@
 - **Étape 1** : statut HTTP `200`, en-tête `Set-Cookie` vidant ou expirant le cookie de session (`Max-Age=0` ou valeur vide).
 - **Étape 2** : statut HTTP `200`, corps de réponse `null` (état non connecté du type `Session` dans `src/types/apiContract.ts`).
 
-- [ ] Scénario RM5 exécuté et validé
+- [x] Scénario RM5 exécuté et validé
 
 ### 2. Valeurs refusées
 
@@ -189,7 +189,7 @@
   ```
   *(Vérifier que `code` vaut bien `"EMAIL_ALREADY_EXISTS"` et non le code interne Better Auth `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`.)*
 
-- [ ] Scénario RM9 exécuté et validé
+- [x] Scénario RM9 exécuté et validé
 
 ### 4. Gestion des erreurs et pannes
 
@@ -240,4 +240,4 @@
   ```
   *(Vérifier que `code` vaut `"INVALID_CREDENTIALS"` et que le `message` en français est identique entre l'étape 1 et l'étape 2, sans révéler si l'erreur porte sur l'email ou sur le mot de passe.)*
 
-- [ ] Scénario RM13 exécuté et validé
+- [x] Scénario RM13 exécuté et validé
