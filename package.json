@@ -9,6 +9,7 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "vitest"
   },
   "keywords": [],
@@ -21,13 +22,16 @@
     "express": "^5.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
+    "eslint": "^10.14.0",
     "prisma": "6.19.3",
     "tsc-alias": "^1.9.9",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.0.5"
   }
